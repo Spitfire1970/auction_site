@@ -11,7 +11,7 @@ class Auction_Listings(models.Model):
     description = models.TextField(default=title)
     starting_bid = models.DecimalField(max_digits=20, decimal_places=2)
     status = models.CharField(max_length=2, null=True, choices=[("A","Active"), ("I","Inactive")], default="A")
-    url_img = models.CharField(max_length=64, blank = True, default="") 
+    url_img = models.CharField(max_length=512, blank = True, default="") 
     category = models.CharField(max_length=32,blank=True, default="")
     users_watchlist = models.ManyToManyField(User,blank=True)
     highest_bid = models.DecimalField(max_digits=20, decimal_places=2, blank=True, default=0)

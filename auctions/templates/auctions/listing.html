@@ -1,6 +1,61 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h2>Listing</h2>
-    TODO
+    <h2>Listing: {{listing.title}}</h2>
+    {% if user.is_authenticated %}
+        {% if watchli %}
+            <form action="{% url 'listing' listing.id %}" method="post">
+                {% csrf_token %}
+                <input type="submit" name="remove" value="Remove from watchlist" style = "background-color:rgb(253, 37, 37)">
+            </form>
+        {% else %}
+            <form action="{% url 'listing' listing.id %}" method="post">
+                {% csrf_token %}
+                <input type="submit" name="add" value="Add to watchlist" style = "background-color:rgb(141, 211, 71)">
+            </form>
+        {% endif %}
+        {% if user == listing.creator and listing.status == "A"%}
+            <form action="{% url 'listing' listing.id %}" method="post">
+                {% csrf_token %}
+                <input type="submit" name="close" value="Close auction" style = "background-color:rgb(193, 190, 190);height:30px; width:112.5px;font-size: 15px">
+            </form>
+        {% endif %}
+    {% endif %}
+    <br>
+    {% if listing.url_img != "" %}
+        <img src = {{listing.url_img}} alt="img not found" width="300" height="400"><br><br>
+    {% endif %}
+    {{listing.description}}<br><br>
+    {% if listing.highest_bid != 0 %}
+        <h3>Current Price: ₹{{listing.highest_bid}}</h3><br>
+    {% else %}
+        <h3>Starting Bid: ₹{{listing.starting_bid}}</h3><br>
+    {% endif %}
+    {% if user.is_authenticated and listing.status == "A" %}
+
+        <form action = "{% url 'listing' listing.id %}" method = "post">
+            {% csrf_token %}
+            {% if message %}
+                <input type="number" name="add_bid" placeholder="{{message}}" required> <br>
+            {% else %}
+                <input type="number" name="add_bid" required> <br>
+            {% endif %}
+            <input type = "submit" value = "Place Bid"  style = "background-color:rgb(44, 157, 249)"><br><br>
+        </form>
+    {% endif %}
+    {% if listing.status == "I" %}
+        <h1>Auction closed</h1>
+        {% if winner == user%}
+            <h1>{{user}} YOU WON THE AUCTION!</h1>
+        {% endif %}
+    {% endif %}
+    <h4>Details</h4>
+    <ul>
+        <li>Listed by: {{listing.creator}}</li>
+        <li>Category: {{listing.category}}</li>
+    </ul>
+
+
+
+    
 {% endblock %}

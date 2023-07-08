@@ -1,7 +1,7 @@
 {% extends "auctions/layout.html" %}
 
 {% block body %}
-    <h2>Active Listings</h2>
+    <h2>Your Watchlist</h2>
     {% for listing in listings %}
             <div>
                 {% if listing.url_img != "" %}
@@ -11,6 +11,9 @@
                     <h4>{{listing.title}}</h4>
                 </a>
                     <h6>{{listing.description}}</h6>
+                    {% if listing.status == "I" %}
+                        <strong><h4>!AUCTION CLOSED!</h4></strong>
+                    {% endif %}
                     <h6><strong>Starting Bid:</strong> ₹{{listing.starting_bid}}</h6>
                     {% if listing.highest_bid != 0 %}
                         <h6><strong>Current Price:</strong> ₹{{listing.highest_bid}}</h6>

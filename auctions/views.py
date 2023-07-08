@@ -20,9 +20,9 @@ def index(request):
         new_listing.status = "A"
         new_listing.creator = User.objects.get(pk = request.user.pk)
         new_listing.save()
-        listings = Auction_Listings.objects.all()
+        listings = Auction_Listings.objects.filter(status = "A")
         return render(request, "auctions/index.html", {"listings":listings})
-    listings = Auction_Listings.objects.all()
+    listings = Auction_Listings.objects.filter(status = "A")
     return render(request, "auctions/index.html", {"listings":listings})
 
 
@@ -81,4 +81,46 @@ def add_listing(request):
     return render(request, "auctions/add_listing.html")
 def show_listing(request, listing_num):
     li = Auction_Listings.objects.get(pk = listing_num)
-    return render(request, "auctions/listing.html", {"listing":li})
+    winning_bid = Bids.objects.get(listing = li, value = li.highest_bid)
+    winner = winning_bid.user
+    if request.method == "POST":
+        if "add_bid" in request.POST:
+            if int(request.POST["add_bid"])>li.highest_bid and int(request.POST["add_bid"])>li.starting_bid:
+                li.highest_bid = int(request.POST["add_bid"])
+                li.save()
+                new_bid = Bids()
+                new_bid.value = int(request.POST["add_bid"])
+                new_bid.user = request.user
+                new_bid.listing = li
+                new_bid.save()
+                return render(request, "auctions/listing.html", {"listing":li, "watchli": request.user in li.users_watchlist.all()})
+            else:
+                return render(request, "auctions/listing.html", {"listing":li, "watchli": request.user in li.users_watchlist.all(), "message": "Bid not high enough!"})
+        elif "close" in request.POST:
+            li.status = "I"
+            li.save()
+            return render(request, "auctions/listing.html", {"listing":li, "watchli": request.user in li.users_watchlist.all(), "winner":winner})
+        else:
+            if "remove" in request.POST:
+                li.users_watchlist.remove(request.user)
+                return render(request, "auctions/listing.html", {"listing":li, "watchli":False, "winner":winner})
+            if "add" in request.POST:
+                li.users_watchlist.add(request.user)
+                return render(request, "auctions/listing.html", {"listing":li, "watchli":True, "winner":winner})
+    return render(request, "auctions/listing.html", {"listing":li,"watchli": request.user in li.users_watchlist.all(), "winner":winner})
+def categories(request):
+    ca = []
+    for i in Auction_Listings.objects.all():
+        c = i.category
+        if (c not in ca) and (c != ""):
+            ca.append(c)
+    return render(request, "auctions/categories.html", {"categories":ca})
+def watchlist(request):
+    ll = []
+    for ob in Auction_Listings.objects.all():
+        if request.user in ob.users_watchlist.all():
+            ll.append(ob)
+    return render(request, "auctions/watchlist.html", {"listings":ll})
+def category(request, categoryy):
+    listings = Auction_Listings.objects.filter(category = categoryy)
+    return render(request, "auctions/category.html", {"category":categoryy,"listings":listings})
