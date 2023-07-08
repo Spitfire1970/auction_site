@@ -2,6 +2,20 @@
 
 {% block body %}
     <h2>Active Listings</h2>
+    {% for listing in listings %}
+            <div>
+                {% if listing.url_img != "" %}
+                    <img src = {{listing.url_img}} alt="img not found" width="300" height="400">
+                {% endif %}
+                <a href = "{% url 'listing' listing.id%}">
+                    <h4>{{listing.title}}</h4>
+                </a>
+                    <h6>{{listing.description}}</h6>
+                    <h6>Starting Bid: Rs. {{listing.starting_bid}}</h6>
+                    {% if listing.highest_bid != 0 %}
+                        <h6>Current Price: {{listing.highest_bid}}</h6>
+                    {% endif %}
+            </div>
+    {% endfor %}
 
-    TODO
 {% endblock %}
