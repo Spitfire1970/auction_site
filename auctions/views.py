@@ -4,7 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 
-from .models import User, Auction_Listings, Bids
+from .models import User, Auction_Listings, Bids, Comments
 
 
 def index(request):
@@ -81,8 +81,12 @@ def add_listing(request):
     return render(request, "auctions/add_listing.html")
 def show_listing(request, listing_num):
     li = Auction_Listings.objects.get(pk = listing_num)
-    winning_bid = Bids.objects.get(listing = li, value = li.highest_bid)
-    winner = winning_bid.user
+    comm = Comments.objects.filter(listing = li)
+    if li.status == "I":
+        winning_bid = Bids.objects.get(listing = li, value = li.highest_bid)
+        winner = winning_bid.user
+    else:
+        winner = None
     if request.method == "POST":
         if "add_bid" in request.POST:
             if int(request.POST["add_bid"])>li.highest_bid and int(request.POST["add_bid"])>li.starting_bid:
@@ -93,21 +97,28 @@ def show_listing(request, listing_num):
                 new_bid.user = request.user
                 new_bid.listing = li
                 new_bid.save()
-                return render(request, "auctions/listing.html", {"listing":li, "watchli": request.user in li.users_watchlist.all()})
+                return render(request, "auctions/listing.html", {"listing":li, "watchli": request.user in li.users_watchlist.all(), "comments":comm})
             else:
-                return render(request, "auctions/listing.html", {"listing":li, "watchli": request.user in li.users_watchlist.all(), "message": "Bid not high enough!"})
+                return render(request, "auctions/listing.html", {"listing":li, "watchli": request.user in li.users_watchlist.all(), "message": "Bid not high enough!", "comments":comm})
         elif "close" in request.POST:
             li.status = "I"
             li.save()
-            return render(request, "auctions/listing.html", {"listing":li, "watchli": request.user in li.users_watchlist.all(), "winner":winner})
+            return render(request, "auctions/listing.html", {"listing":li, "watchli": request.user in li.users_watchlist.all(), "winner":winner, "comments":comm})
+        elif "descr" in request.POST:
+            co = Comments()
+            co.description = request.POST["descr"]
+            co.listing = li
+            co.user = request.user
+            co.save()
+            return render(request, "auctions/listing.html", {"listing":li, "watchli": request.user in li.users_watchlist.all(), "comments":comm})
         else:
             if "remove" in request.POST:
                 li.users_watchlist.remove(request.user)
-                return render(request, "auctions/listing.html", {"listing":li, "watchli":False, "winner":winner})
+                return render(request, "auctions/listing.html", {"listing":li, "watchli":False, "winner":winner, "comments":comm})
             if "add" in request.POST:
                 li.users_watchlist.add(request.user)
-                return render(request, "auctions/listing.html", {"listing":li, "watchli":True, "winner":winner})
-    return render(request, "auctions/listing.html", {"listing":li,"watchli": request.user in li.users_watchlist.all(), "winner":winner})
+                return render(request, "auctions/listing.html", {"listing":li, "watchli":True, "winner":winner, "comments":comm})
+    return render(request, "auctions/listing.html", {"listing":li,"watchli": request.user in li.users_watchlist.all(), "winner":winner, "comments":comm})
 def categories(request):
     ca = []
     for i in Auction_Listings.objects.all():

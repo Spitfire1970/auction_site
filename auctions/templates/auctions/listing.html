@@ -49,12 +49,24 @@
             <h1>{{user}} YOU WON THE AUCTION!</h1>
         {% endif %}
     {% endif %}
+    <br>
     <h4>Details</h4>
     <ul>
         <li>Listed by: {{listing.creator}}</li>
         <li>Category: {{listing.category}}</li>
     </ul>
-
+    <h4>Comments</h4>
+    {% if user.is_authenticated %}
+        <form action = "{% url 'listing' listing.id %}" method = "post">
+            {% csrf_token %}
+            <textarea name = "descr" rows = "8" cols = "100" required>Add a comment...</textarea><br>
+            <input type = "submit" value = "Add comment"  style = "background-color:rgb(44, 157, 249)"><br><br>
+        </form>
+    {% endif %}
+    {% for comment in comments %}
+        @{{comment.user}}<br>
+        <p>{{comment.description}}</p>
+    {% endfor %}
 
 
     
